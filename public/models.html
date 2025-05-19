@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Model AI | MNG AI Gateway</title>
+    <style>
+        :root {
+            --primary: #10a37f;
+            --primary-dark: #0d8c6d;
+            --bg-color: #ffffff;
+            --card-bg: #f5f5f5;
+            --text-color: #333333;
+            --text-secondary: #666666;
+            --border-color: #e0e0e0;
+            --error-color: #e74c3c;
+            --navbar-height: 60px;
+            --sidebar-width: 280px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        
+        .header {
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border-color);
+            background-color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: var(--navbar-height);
+            position: fixed;
+            width: 100%;
+            z-index: 100;
+        }
+        
+        .logo {
+            font-weight: bold;
+            color: var(--primary);
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .powered-by {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: var(--text-color);
+        }
+        
+        .sidebar {
+            position: fixed;
+            top: var(--navbar-height);
+            left: 0;
+            width: var(--sidebar-width);
+            height: calc(100vh - var(--navbar-height));
+            background-color: white;
+            border-right: 1px solid var(--border-color);
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+            z-index: 90;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        
+        .sidebar.active {
+            transform: translateX(0);
+        }
+        
+        .sidebar-menu {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .sidebar-menu li a {
+            display: block;
+            padding: 10px 15px;
+            border-radius: 5px;
+            color: var(--text-color);
+            text-decoration: none;
+            transition: background-color 0.2s;
+        }
+        
+        .sidebar-menu li a:hover {
+            background-color: var(--card-bg);
+        }
+        
+        .sidebar-menu li a.active {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .main-content {
+            flex: 1;
+            margin-top: var(--navbar-height);
+            padding: 30px 20px;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+            width: 100%;
+        }
+        
+        .page-header {
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .page-header h1 {
+            font-size: 2.2rem;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+        
+        .page-header p {
+            color: var(--text-secondary);
+            max-width: 700px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+        
+        .models-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 25px;
+            margin-top: 40px;
+        }
+        
+        .model-card {
+            background-color: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            border: 1px solid var(--border-color);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .model-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.12);
+        }
+        
+        .model-card-header {
+            background-color: var(--primary);
+            color: white;
+            padding: 18px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .model-card-header h3 {
+            font-size: 1.2rem;
+            margin: 0;
+        }
+        
+        .model-badge {
+            background-color: white;
+            color: var(--primary);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        
+        .model-card-body {
+            padding: 20px;
+        }
+        
+        .model-meta {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .model-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+        
+        .model-meta-item svg {
+            width: 16px;
+            height: 16px;
+            fill: var(--text-secondary);
+        }
+        
+        .model-description {
+            color: var(--text-color);
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        
+        .model-features {
+            margin-bottom: 20px;
+        }
+        
+        .model-features h4 {
+            font-size: 1rem;
+            margin-bottom: 10px;
+            color: var(--primary);
+        }
+        
+        .features-list {
+            list-style-type: none;
+        }
+        
+        .features-list li {
+            padding: 5px 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+        
+        .features-list li::before {
+            content: "✓";
+            color: var(--primary);
+            font-weight: bold;
+        }
+        
+        .model-card-footer {
+            padding: 15px 20px;
+            background-color: var(--card-bg);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .model-version {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+        
+        .use-model-btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+        
+        .use-model-btn:hover {
+            background-color: var(--primary-dark);
+        }
+        
+        /* Overlay for mobile */
+        .sidebar-overlay {
+            position: fixed;
+            top: var(--navbar-height);
+            left: 0;
+            width: 100%;
+            height: calc(100vh - var(--navbar-height));
+            background-color: rgba(0,0,0,0.5);
+            z-index: 80;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        
+        .sidebar-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+        
+        /* Responsive styles */
+        @media (max-width: 768px) {
+            .menu-toggle {
+                display: block;
+            }
+            
+            .powered-by {
+                display: none;
+            }
+            
+            .models-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .page-header h1 {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <button class="menu-toggle" id="menu-toggle">☰</button>
+        <div class="logo">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="#10a37f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                <path d="M12 8V16" stroke="#10a37f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                <path d="M8 12H16" stroke="#10a37f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+            </svg>
+            MNG AI Assistant
+        </div>
+        <div class="powered-by">Dikembangkan oleh MNGpedia</div>
+    </div>
+    
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+    
+    <div class="sidebar" id="sidebar">
+        <ul class="sidebar-menu">
+            <li><a href="index.html">Chat AI</a></li>
+            <li><a href="about.html">Tentang MNG AI</a></li>
+            <li><a href="models.html" class="active">Model AI</a></li>
+            <li><a href="contact.html">Kontak Developer</a></li>
+            <li><a href="guide.html">Panduan Penggunaan</a></li>
+            <li><a href="privacy.html">Kebijakan Privasi</a></li>
+        </ul>
+    </div>
+    
+    <div class="main-content">
+        <div class="page-header">
+            <h1>Model AI yang Tersedia</h1>
+            <p>MNG AI Gateway menyediakan berbagai model AI canggih untuk kebutuhan berbeda. Pilih model yang paling sesuai dengan kebutuhan Anda.</p>
+        </div>
+        
+        <div class="models-grid">
+            <!-- GPT-4o -->
+            <div class="model-card">
+                <div class="model-card-header">
+                    <h3>GPT-4o</h3>
+                    <span class="model-badge">Rekomendasi</span>
+                </div>
+                <div class="model-card-body">
+                    <div class="model-meta">
+                        <div class="model-meta-item">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
+                                <path d="M13.55 8.46c-.34-.34-.87-.34-1.21 0L7.1 13.7c-.34.34-.34.87 0 1.21.34.34.87.34 1.21 0l4.24-4.24 4.24 4.24c.34.34.87.34 1.21 0 .34-.34.34-.87 0-1.21l-5.25-5.24z"/>
+                            </svg>
+                            OpenAI
+                        </div>
+                        <div class="model-meta-item">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
+                            </svg>
+                            128K Context
+                        </div>
+                    </div>
+                    <div class="model-description">
+                        Model multimodal terbaru dari OpenAI yang menggabungkan teks, gambar, dan audio. Lebih cepat dan 50% lebih murah daripada GPT-4 Turbo dengan performa setara.
+                    </div>
+                    <div class="model-features">
+                        <h4>Keunggulan:</h4>
+                        <ul class="features-list">
+                            <li>Pemrosesan multimodal (teks, gambar, audio)</li>
+                            <li>Pemahaman konteks yang lebih baik</li>
+                            <li>Respons lebih alami dan manusiawi</li>
+                            <li>Dukungan untuk 50+ bahasa</li>
+                            <li>Optimasi untuk kecepatan</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="model-card-footer">
+                    <span class="model-version">Versi: omni-2024-05-13</span>
+                    <button class="use-model-btn" data-model="gpt-4o">Gunakan Model</button>
+                </div>
+            </div>
+            
+            <!-- GPT-3.5 Turbo -->
+            <div class="model-card">
+                <div class="model-card-header">
+                    <h3>GPT-3.5 Turbo</h3>
+                    <span class="model-badge">Cepat</span>
+                </div>
+                <div class="model-card-body">
+                    <div class="model-meta">
+                        <div class="model-meta-item">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
+                                <path d="M13.55 8.46c-.34-.34-.87-.34-1.21 0L7.1 13.7c-.34.34-.34.87 0 1.21.34.34.87.34 1.21 0l4.24-4.24 4.24 4.24c.34.34.87.34 1.21 0 .34-.34.34-.87 0-1.21l-5.25-5.24z"/>
+                            </svg>
+                            OpenAI
+                        </div>
+                        <div class="model-meta-item">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
+                            </svg>
+                            16K Context
+                        </div>
+                    </div>
+                    <div class="model-description">
+                        Versi optimasi dari GPT-3.5 yang lebih cepat dan efisien. Cocok untuk aplikasi umum dengan kebutuhan respons cepat dan biaya lebih rendah.
+                    </div>
+                    <div class="model-features">
+                        <h4>Keunggulan:</h4>
+                        <ul class="features-list">
+                            <li>Kecepatan respons sangat tinggi</li>
+                            <li>Biaya operasional rendah</li>
+                            <li>Dukungan untuk 26 bahasa</li>
+                            <li>Optimasi untuk percakapan</li>
+                            <li>Stabil dan teruji</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="model-card-footer">
+                    <span class="model-version">Versi: 0125</span>
+                    <button class="use-model-btn" data-model="gpt-3.5-turbo">Gunakan Model</button>
+                </div>
+            </div>
+            
+            <!-- Llama 3 -->
+            <div class="model-card">
+                <div class="model-card-header">
+                    <h3>Llama 3 8B</h3>
+                    <span class="model-badge">Open Source</span>
+                </div>
+                <div class="model-card-body">
+                    <div class="model-meta">
+                        <div class="model-meta-item">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
+                                <path d="M13.55 8.46c-.34-.34-.87-.34-1.21 0L7.1 13.7c-.34.34-.34.87 0 1.21.34.34.87.34 1.21 0l4.24-4.24 4.24 4.24c.34.34.87.34 1.21 0 .34-.34.34-.87 0-1.21l-5.25-5.24z"/>
+                            </svg>
+                            Meta
+                        </div>
+                        <div class="model-meta-item">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
+                            </svg>
+                            8K Context
+                        </div>
+                    </div>
+                    <div class="model-description">
+                        Model open-source terbaru dari Meta dengan 8 miliar parameter. Menawarkan performa yang kompetitif dengan model komersial dalam ukuran yang lebih kecil.
+                    </div>
+                    <div class="model-features">
+                        <h4>Keunggulan:</h4>
+                        <ul class="features-list">
+                            <li>Lisensi open-source yang fleksibel</li>
+                            <li>Kinerja tinggi untuk ukurannya</li>
+                            <li>Dilatih pada dataset besar dan beragam</li>
+                            <li>Dukungan untuk fine-tuning</li>
+                            <li>Komunitas pengembang yang aktif</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="model-card-footer">
+                    <span class="model-version">Versi: 8B-instruct</span>
+                    <button class="use-model-btn" data-model="llama-3-8b-instruct">Gunakan Model</button>
+                </div>
+            </div>
+            
+            <!-- Gemma -->
+            <div class="model-card">
+                <div class="model-card-header">
+                    <h3>Gemma 2B</h3>
+                    <span class="model-badge">Ringan</span>
+                </div>
+                <div class="model-card-body">
+                    <div class="model-meta">
+                        <div class="model-meta-item">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
+                                <path d="M13.55 8.46c-.34-.34-.87-.34-1.21 0L7.1 13.7c-.34.34-.34.87 0 1.21.34.34.87.34 1.21 0l4.24-4.24 4.24 4.24c.34.34.87.34 1.21 0 .34-.34.34-.87 0-1.21l-5.25-5.24z"/>
+                            </svg>
+                            Google
+                        </div>
+                        <div class="model-meta-item">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
+                            </svg>
+                            4K Context
+                        </div>
+                    </div>
+                    <div class="model-description">
+                        Model ringan dari Google berdasarkan teknologi yang sama dengan Gemini. Dirancang untuk perangkat dengan sumber daya terbatas tetapi tetap mampu.
+                    </div>
+                    <div class="model-features">
+                        <h4>Keunggulan:</h4>
+                        <ul class="features-list">
+                            <li>Ukuran kecil (2B parameter)</li>
+                            <li>Konsumsi sumber daya rendah</li>
+                            <li>Respons cepat</li>
+                            <li>Dapat berjalan di perangkat edge</li>
+                            <li>Dukungan untuk tugas-tugas dasar</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="model-card-footer">
+                    <span class="model-version">Versi: 2-9b-it</span>
+                    <button class="use-model-btn" data-model="gemma-2-9b-it">Gunakan Model</button>
+                </div>
+            </div>
+            
+            <!-- Mistral -->
+            <div class="model-card">
+                <div class="model-card-header">
+                    <h3>Mistral 7B</h3>
+                    <span class="model-badge">Efisien</span>
+                </div>
+                <div class="model-card-body">
+                    <div class="model-meta">
+                        <div class="model-meta-item">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
+                                <path d="M13.55 8.46c-.34-.34-.87-.34-1.21 0L7.1 13.7c-.34.34-.34.87 0 1.21.34.34.87.34 1.21 0l4.24-4.24 4.24 4.24c.34.34.87.34 1.21 0 .34-.34.34-.87 0-1.21l-5.25-5.24z"/>
+                            </svg>
+                            Mistral AI
+                        </div>
+                        <div class="model-meta-item">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
+                            </svg>
+                            8K Context
+                        </div>
+                    </div>
+                    <div class="model-description">
+                        Model 7B parameter dari Mistral AI yang menawarkan performa mengesankan untuk ukurannya. Menggunakan grouped-query attention untuk efisiensi.
+                    </div>
+                    <div class="model-features">
+                        <h4>Keunggulan:</h4>
+                        <ul class="features-list">
+                            <li>Arsitektur inovatif</li>
+                            <li>Performa tinggi untuk ukuran model</li>
+                            <li>Efisiensi komputasi</li>
+                            <li>Dukungan untuk berbagai bahasa</li>
+                            <li>Kompatibel dengan berbagai perangkat</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="model-card-footer">
+                    <span class="model-version">Versi: 7B-instruct</span>
+                    <button class="use-model-btn" data-model="mistral-7b-instruct">Gunakan Model</button>
+                </div>
+            </div>
+            
+            <!-- Mixtral -->
+            <div class="model-card">
+                <div class="model-card-header">
+                    <h3>Mixtral 8x7B</h3>
+                    <span class="model-badge">Expert</span>
+                </div>
+                <div class="model-card-body">
+                    <div class="model-meta">
+                        <div class="model-meta-item">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
+                                <path d="M13.55 8.46c-.34-.34-.87-.34-1.21 0L7.1 13.7c-.34.34-.34.87 0 1.21.34.34.87.34 1.21 0l4.24-4.24 4.24 4.24c.34.34.87.34 1.21 0 .34-.34.34-.87 0-1.21l-5.25-5.24z"/>
+                            </svg>
+                            Mistral AI
+                        </div>
+                        <div class="model-meta-item">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
+                            </svg>
+                            32K Context
+                        </div>
+                    </div>
+                    <div class="model-description">
+                        Model sparse mixture-of-experts dengan 8 ahli masing-masing 7B parameter. Hanya menggunakan 12.9B parameter aktif selama inferensi.
+                    </div>
+                    <div class="model-features">
+                        <h4>Keunggulan:</h4>
+                        <ul class="features-list">
+                            <li>Arsitektur mixture-of-experts</li>
+                            <li>Kinerja setara model 70B parameter</li>
+                            <li>Kecepatan inferensi tinggi</li>
+                            <li>Pemahaman mendalam topik kompleks</li>
+                            <li>Dukungan konteks panjang</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="model-card-footer">
+                    <span class="model-version">Versi: 8x7B-instruct</span>
+                    <button class="use-model-btn" data-model="mixtral-8x7b-instruct">Gunakan Model</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const menuToggle = document.getElementById('menu-toggle');
+            const sidebar = document.getElementById('sidebar');
+            const sidebarOverlay = document.getElementById('sidebar-overlay');
+            const useModelBtns = document.querySelectorAll('.use-model-btn');
+            
+            // Toggle sidebar for mobile
+            menuToggle.addEventListener('click', function() {
+                sidebar.classList.toggle('active');
+                sidebarOverlay.classList.toggle('active');
+            });
+            
+            // Close sidebar when clicking overlay
+            sidebarOverlay.addEventListener('click', function() {
+                sidebar.classList.remove('active');
+                sidebarOverlay.classList.remove('active');
+            });
+            
+            // Handle use model button clicks
+            useModelBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const model = this.dataset.model;
+                    localStorage.setItem('preferredModel', model);
+                    window.location.href = 'index.html';
+                });
+            });
+        });
+    </script>
+</body>
+</html>

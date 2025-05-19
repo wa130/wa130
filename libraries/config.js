@@ -1,0 +1,1 @@
+global.aiOpenRouter = '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'
